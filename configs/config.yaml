@@ -1,0 +1,18 @@
+llm:
+  formalizer:
+    provider: openai
+    model: ""
+    api_key: ""
+    base_url: ""
+    temperature: 1
+    max_completion_tokens: 20000
+
+services:
+  verifier:
+    url: "https://console.siflow.cn/siflow/auriga/skyinfer/ytwang/repl-server-1/verify"
+    timeout: 60
+  goal_extractor:
+    url: "https://console.siflow.cn/siflow/auriga/skyinfer/ytwang/goal-ext-1/extract"
+    timeout: 120
+
+enable_rag: True

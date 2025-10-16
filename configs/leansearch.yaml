@@ -1,0 +1,3 @@
+std_search_remote:
+  base_url: "http://leansearch-1.t-skyinfer-ytwang.svc.cluster.local/search"
+  num_results: 10
