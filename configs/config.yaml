@@ -1,7 +1,14 @@
 llm:
   formalizer:
     provider: openai
-    model: ""
+    model: "gemini-2.5-pro"
+    api_key: ""
+    base_url: ""
+    temperature: 1
+    max_completion_tokens: 20000
+  main_model:
+    provider: openai
+    model: "gemini-2.5-pro"
     api_key: ""
     base_url: ""
     temperature: 1
