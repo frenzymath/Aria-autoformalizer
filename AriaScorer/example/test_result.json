@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "informal_statement": "Let $R$ be a UFD with two nonassociate prime elements $p$ and $q$ such that every prime element is an associate of either $p$ or $q$. \n\tProve that $R$ is a PID.",
+    "formal_statement": "import Mathlib\n\n/-- Let $R$ be a UFD with two nonassociate prime elements $p$ and $q$ such that every prime\nelement is an associate of either $p$ or $q$.  Prove that $R$ is a PID. -/\ntheorem isPrincipalIdealRing_of_associated_or_associated {R : Type} [CommRing R] [IsDomain R]\n    [UniqueFactorizationMonoid R] {p q : R} (hp : Prime p) (hq : Prime q) (hpq : ¬ Associated p q)\n    (h : ∀ {x : R}, Prime x → Associated x p ∨ Associated x q) :\n    IsPrincipalIdealRing R := by\n  sorry",
+    "source": "FATE-X",
+    "tag": [
+      "Abstract Algebra",
+      "Ring Theory",
+      "PID, ED and UFD"
+    ],
+    "status": "success",
+    "agent_output": "\nimport Mathlib\n\n/--\nLet $R$ be a UFD with two nonassociate prime elements $p$ and $q$ such that every prime\nelement is an associate of either $p$ or $q$. Then $R$ is a PID.\n-/\ntheorem UFD_with_two_prime_classes_is_PID\n    {R : Type*} [CommRing R] [IsDomain R] [UniqueFactorizationMonoid R]\n    (p q : R)\n    (hp : Prime p)\n    (hq : Prime q)\n    (hpq_non_assoc : ¬ Associated p q)\n    (h_all_primes : ∀ r : R, Prime r → Associated r p ∨ Associated r q) :\n    IsPrincipalIdealRing R :=\n  sorry\n",
+    "agent_generated_context": "-- [Auto-Generated Definition for 'UFD']\n/- Definition for 'UFD' found in Mathlib as: UniqueFactorizationMonoid -/\n\n-- [Auto-Generated Definition for 'nonassociate prime elements']\n\nimport Mathlib\n\n/--\nA set of non-associate prime elements.\n\nThis is defined as a set of elements `s` such that:\n1. Every element of `s` is `Prime`.\n2. No two distinct elements of `s` are `Associated`.\n-/\ndef NonassocPrimes {R : Type*} [CommMonoidWithZero R] (s : Set R) : Prop :=\n  (∀ p ∈ s, Prime p) ∧ (∀ p ∈ s, ∀ q ∈ s, p ≠ q → ¬ Associated p q)\n\n\n-- [Auto-Generated Definition for 'prime element']\n/- Definition for 'prime element' found in Mathlib as: Prime -/\n\n-- [Auto-Generated Definition for 'associates']\n/- Definition for 'associates' found in Mathlib as: Associates -/abbrev Associates(M : Type*) [Monoid M] : Type _ : (M : Type u_2) → [inst : Monoid M] → Type u_2 := :=\n  Quotient (Associated.setoid M)\n\n-- [Auto-Generated Definition for 'PID']\n\nimport Mathlib\n\n/-- A **principal ideal domain** is an integral domain in which every ideal is principal. -/\nclass IsPrincipalIdealDomain (R : Type u) [CommRing R] extends IsDomain R : Prop where\n  is_principal : IsPrincipalIdealRing R\n",
+    "lean_build": "Succeed",
+    "math_conditions": "[Conditions and Conclusions]:\n**Conditions:**\n1.  $R$ is a UFD (Unique Factorization Domain).\n2.  $\\exists p, q \\in R$ such that $p$ is a prime element and $q$ is a prime element.\n3.  $p$ and $q$ are nonassociate (i.e., $p \\nsim q$, which means $\\forall u \\in R^\\times, p \\neq uq$, where $R^\\times$ is the set of units in $R$).\n4.  For any prime element $\\pi \\in R$, $\\pi$ is an associate of $p$ or $\\pi$ is an associate of $q$. (i.e., $\\forall \\pi \\in R$, if $\\pi$ is prime, then $(\\exists u \\in R^\\times, \\pi = up) \\lor (\\exists v \\in R^\\times, \\pi = vq)$).\n\n**Conclusion:**\n-   $R$ is a PID (Principal Ideal Domain), i.e., for every ideal $I$ of $R$, there exists an element $a \\in R$ such that $I = (a) = \\{ra \\mid r \\in R\\}$.",
+    "lean_score": 1.0,
+    "pass": true
+  }
+]
