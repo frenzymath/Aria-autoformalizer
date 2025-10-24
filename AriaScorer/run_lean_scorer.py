@@ -23,6 +23,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Start AriaScorer")
     parser.add_argument("input_file", type=str, help="Input Path")
     parser.add_argument("output_file", type=str, help="Output Path")
+    parser.add_argument("--workers", type=int, default=10, help="Specifies the number of threads used for parallel processing")
     args = parser.parse_args()
-    lean_score(args.input_file, df_mathlib, args.output_file)
-    print(f"\n✅ Finished scoring. Output saved to: {args.output_file}")
+    
+    if df_mathlib is not None:
+        lean_score(
+            args.input_file, 
+            df_mathlib, 
+            args.output_file, 
+            max_workers=args.workers
+        )
+        print(f"\n✅ Finished scoring. Output saved to: {args.output_file}")
+    
+    else:
+        print("因 mathlib 数据集加载失败，未启动评分。")

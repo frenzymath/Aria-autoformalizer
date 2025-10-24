@@ -44,10 +44,10 @@ All commands should be executed from the root directory of the `AriaScorer` proj
 
 ## Simple Inference
 
-Our test environment use Gemini-2.5-Pro, and set `THRESHOLD_PASS` at 0.9.You can use the following script to run AriaScorer on your own dataset by changing the input and output paths. You can also change `THRESHOLD_PASS` according to your own preference.
+Our test environment use Gemini-2.5-Pro, and set `THRESHOLD_PASS` at 0.9.You can use the following script to run AriaScorer on your own dataset by changing the input and output paths. You can also change `THRESHOLD_PASS` according to your own preference. The script supports parallel processing to significantly speed up scoring. Use the `--workers` argument to specify the number of parallel threads. If you omit the `--workers` argument, it will use a default value of 10.
 
 ```bash
-python run_lean_scorer.py example/test.json example/test_result
+python run_lean_scorer.py --workers 20 example/test.json example/test_result
 ```
 
 This will generate two files:
