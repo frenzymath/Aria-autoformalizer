@@ -23,7 +23,7 @@ python -m src.Agents.Flow.run_single
 To process multiple statements from a `.jsonl` file, use the following command:
 
 ```bash
-python -m src.Agents.Flow.run_batch data.jsonl
+python -m src.Agents.Flow.run_batch -i data.jsonl -o results/data.jsonl
 ```
 
 ## Input File Format
