@@ -29,6 +29,8 @@ from openai import (
 # 导入 OpenAI API 的返回类型，用于类型注解
 from openai.types.chat import ChatCompletion
 
+from .pretty_error import VerifyResult, pp_verify_result
+
 DEF_REFINEMENT_PROMPT_TEMPLATE = """
 You are a Lean 4 expert. The following code you previously generated has a compilation error.
 Your task is to analyze the error message and provide a corrected version of the code.
@@ -289,13 +291,14 @@ def lean_check(code: str) -> Dict:
         return {"error": str(e)}
 
 
-async def async_lean_check(session, code: str) -> Dict:
+async def async_lean_check(session, code: str) -> VerifyResult:
     url = "http://repl-server-1.t-skyinfer-ytwang.svc.cluster.local/verify"
     try:
         async with session.post(url, json={"code": code, "timeout": 60}) as response:
-            return await response.json()
+            result_dict = await response.json()
+            return VerifyResult.model_validate(result_dict)
     except Exception as e:
-        return {"error": str(e), "complete": False}
+        return VerifyResult.from_system_error(code, 60, str(e))
     
     
 
@@ -330,7 +333,9 @@ async def def_generate_and_verify_loop(
 
             if not llm_result_content:
                 print("LLM failed to generate")
-            current_code = extract_code_block(llm_result_content, "lean", return_org_content=True)
+            current_code = extract_code_block(llm_result_content, "lean4", return_org_content=True)
+            if current_code is None:
+                current_code = extract_code_block(llm_result_content, "lean", return_org_content=True)
             print(current_code)
             if not current_code:
                 error_msg = "LLM failed to generate a valid code block."
@@ -343,16 +348,16 @@ async def def_generate_and_verify_loop(
             verification_result = await async_lean_check(session, current_code)
 
             # --- 步骤 3: 检查结果 ---
-            if verification_result.get("pass_"):
+            if verification_result.pass_:
                 print("  ✅ Verification PASSED!")
                 return {"success": True, "code": current_code, "error": None}
             else:
                 print(verification_result)
-                sorted_messages = verification_result.get("sorted_messages", {})
-                error_list = sorted_messages.get("errors", [])
+                sorted_messages = verification_result.sorted_messages
+                error_list = sorted_messages.errors
 
                 if error_list:
-                    error_msg = "\n".join([err.get("data", "Unknown error") for err in error_list])
+                    error_msg = pp_verify_result(verification_result)
                 else:
                     error_msg = "No specific error message found."
                 print(f"  ❌ Verification FAILED. Error: {str(error_msg)}...")
@@ -401,7 +406,9 @@ async def stat_generate_and_verify_loop(
 
             if not llm_result_content:
                 print("LLM failed to generate")
-            current_code = extract_code_block(llm_result_content, "lean", return_org_content=True)
+            current_code = extract_code_block(llm_result_content, "lean4", return_org_content=True)
+            if current_code is None:
+                current_code = extract_code_block(llm_result_content, "lean", return_org_content=True)
             print(current_code)
             if not current_code:
                 error_msg = "LLM failed to generate a valid code block."
@@ -414,16 +421,16 @@ async def stat_generate_and_verify_loop(
             verification_result = await async_lean_check(session, current_code)
 
             # --- 步骤 3: 检查结果 ---
-            if verification_result.get("pass_"):
+            if verification_result.pass_:
                 print("  ✅ Verification PASSED!")
                 return {"success": True, "code": current_code, "error": None}
             else:
                 print(verification_result)
-                sorted_messages = verification_result.get("sorted_messages", {})
-                error_list = sorted_messages.get("errors", [])
+                sorted_messages = verification_result.sorted_messages
+                error_list = sorted_messages.errors
 
                 if error_list:
-                    error_msg = "\n".join([err.get("data", "Unknown error") for err in error_list])
+                    error_msg = pp_verify_result(verification_result)
                 else:
                     error_msg = "No specific error message found."
                 print(f"  ❌ Verification FAILED. Error: {str(error_msg)}...")
