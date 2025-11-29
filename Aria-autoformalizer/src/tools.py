@@ -1,22 +1,15 @@
 import json
 import re
-import time
 from typing import Dict, List, Union, Any, Optional
 from openai import BadRequestError
 from loguru import logger
 import traceback
 import sys
-import os
 import sys
 from pathlib import Path
-import requests
-import Levenshtein
-import hashlib
-import xlsxwriter
 from src.PocketFlow import Flow
 import aiohttp
 import asyncio
-import yaml
 from openai import (
     AsyncOpenAI,
     APIError,
@@ -45,7 +38,7 @@ First, provide a brief analysis of the problem in the following format:
 **Step 2: Corrected Lean 4 Code**
 Then, provide the complete, corrected code in a single Lean code block.
 Do not change the original theorem statement, only fix the proof or definition.
-**Caution:** 
+**Caution:**
 You are not sure about the explicit header, so DO NOT generate explicit header like 'import Mathlib.RingTheory.Noetherian', USE 'import Mathlib'. **Crucially, you must NOT write the proof.** Your only goal is to state the theorem correctly.
 
 **Failed Code:**
@@ -63,7 +56,7 @@ STAT_REFINEMENT_PROMPT_TEMPLATE = """
 You are a Lean 4 expert. The following code you previously generated has a compilation error.
 Your task is to analyze the error message and provide a corrected version of the code.
 Do not change the original theorem statement and the definitions, only fix the code.
-**Caution:** 
+**Caution:**
 You are not sure about the explicit header, so DO NOT generate explicit header like 'import Mathlib.RingTheory.Noetherian', use 'import Mathlib'. **Crucially, you must NOT write the proof.** Your only goal is to state the theorem correctly. The proof block must be replaced with the `sorry` keyword.
 
 **Failed Code:**
@@ -78,7 +71,7 @@ You are not sure about the explicit header, so DO NOT generate explicit header l
 Provide the complete, corrected Lean 4 code in a single code block, without any extra explanation. USE 'import Mathlib' as a header!
 """
 async def llm(msgs: List, config: Dict, max_retries: int = 5):
-    
+
     for attempt in range(max_retries):
         try:
             print(f"  [LLM] Attempt {attempt + 1}/{max_retries} to connect to API server...")
@@ -87,7 +80,7 @@ async def llm(msgs: List, config: Dict, max_retries: int = 5):
                 api_key=config["api_key"],
                 timeout=600.0,
             )
-            
+
             response = await client.chat.completions.create(
                 model=config["model"],
                 messages=msgs,
@@ -113,7 +106,7 @@ async def llm(msgs: List, config: Dict, max_retries: int = 5):
                 print(f"!!!!!!!!!!! Could not connect to API server. Retrying in {wait_time} seconds...")
             print(f"!!!!!!!!!!! Error details: {e}")
             print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            
+
             # 如果不是最后一次尝试，就等待后重试
             if attempt < max_retries - 1:
                 await asyncio.sleep(wait_time)
@@ -259,81 +252,7 @@ def extract_code_block(
         str or dict or None: The extracted content, or None if no block is found and return_org_content is False.
     """
     try:
-        extract_content = re.findall(
-            r"```" + block_type + r"([\s\S]*?)```", response, re.DOTALL
-        )
-        if len(extract_content) > 0:
-            if block_type == "json":
-                return safe_json_loads(extract_content[0])
-            else:
-                return extract_content[-1]
-        else:
-            if return_org_content:
-                return response
-            else:
-                return None
-    except Exception as e:
-        print(e)
-        if return_org_content:
-            return response
-        else:
-            return None
-
-
-def lean_check(code: str) -> Dict:
-    url = ""
-    try:
-        response = requests.post(url, json={"code": code, "timeout": 1600})
-        response.raise_for_status()
-        data = response.json()
-        return data
-    except Exception as e:
-        return {"error": str(e)}
-
-
-async def async_lean_check(session, code: str) -> VerifyResult:
-    url = "http://repl-server-1.t-skyinfer-ytwang.svc.cluster.local/verify"
-    try:
-        async with session.post(url, json={"code": code, "timeout": 60}) as response:
-            result_dict = await response.json()
-            return VerifyResult.model_validate(result_dict)
-    except Exception as e:
-        return VerifyResult.from_system_error(code, 60, str(e))
-    
-    
-
-async def def_generate_and_verify_loop(
-    initial_prompt: str,
-    config: Dict,
-    max_retries: int = 3,
-    stats_tracker: Optional[Dict] = None,
-    counter_key: str = "default_def_calls"
-) -> Dict:
-    """
-    管理一个完整的“生成-验证-修正”循环。
-    """
-    conversation_history: List[Dict[str, str]] = [{"role": "user", "content": initial_prompt}]
-    
-    current_code = ""
-    current_prompt = initial_prompt
-
-    async with aiohttp.ClientSession() as session:
-        for i in range(max_retries):
-            print(f"  Attempt {i + 1}/{max_retries}...")
-            if stats_tracker is not None:
-                stats_tracker[counter_key] = stats_tracker.get(counter_key, 0) + 1
-            # --- 步骤 1: 生成代码 ---
-            response = await llm(conversation_history, config["llm"]["main_model"])
-            
-            llm_result_content = ""
-            if response.choices and response.choices[0].message and response.choices[0].message.content:
-                llm_result_content = response.choices[0].message.content
-            
-            conversation_history.append({"role": "assistant", "content": llm_result_content})
-
-            if not llm_result_content:
-                print("LLM failed to generate")
-            current_code = extract_code_block(llm_result_content, "lean4", return_org_content=True)
+        extract_code_block(llm_result_content, "lean4", return_org_content=False)
             if current_code is None:
                 current_code = extract_code_block(llm_result_content, "lean", return_org_content=True)
             print(current_code)
@@ -363,7 +282,7 @@ async def def_generate_and_verify_loop(
                 print(f"  ❌ Verification FAILED. Error: {str(error_msg)}...")
                 if i == max_retries - 1:
                     return {"success": False, "code": current_code, "error": str(error_msg)}
-            
+
                 # --- 步骤 4: 准备下一次修正 ---
                 print("  Preparing for refinement...")
                 refinement_prompt = DEF_REFINEMENT_PROMPT_TEMPLATE.format(
@@ -386,7 +305,7 @@ async def stat_generate_and_verify_loop(
     管理一个完整的“生成-验证-修正”循环。
     """
     conversation_history: List[Dict[str, str]] = [{"role": "user", "content": initial_prompt}]
-    
+
     current_code = ""
     current_prompt = initial_prompt
 
@@ -397,16 +316,16 @@ async def stat_generate_and_verify_loop(
                 stats_tracker[counter_key] = stats_tracker.get(counter_key, 0) + 1
             # --- 步骤 1: 生成代码 ---
             response = await llm(conversation_history, config["llm"]["main_model"])
-            
+
             llm_result_content = ""
             if response.choices and response.choices[0].message and response.choices[0].message.content:
                 llm_result_content = response.choices[0].message.content
-            
+
             conversation_history.append({"role": "assistant", "content": llm_result_content})
 
             if not llm_result_content:
                 print("LLM failed to generate")
-            current_code = extract_code_block(llm_result_content, "lean4", return_org_content=True)
+            current_code = extract_code_block(llm_result_content, "lean4", return_org_content=False)
             if current_code is None:
                 current_code = extract_code_block(llm_result_content, "lean", return_org_content=True)
             print(current_code)
@@ -436,7 +355,7 @@ async def stat_generate_and_verify_loop(
                 print(f"  ❌ Verification FAILED. Error: {str(error_msg)}...")
                 if i == max_retries - 1:
                     return {"success": False, "code": current_code, "error": str(error_msg)}
-            
+
                 # --- 步骤 4: 准备下一次修正 ---
                 print("  Preparing for refinement...")
                 refinement_prompt = STAT_REFINEMENT_PROMPT_TEMPLATE.format(
@@ -476,5 +395,5 @@ def format_formal_statement(result: Dict[str, Any]) -> str:
             # 如果没有提供 value，使用 sorry 作为占位符
             body = ":= sorry"
         formal_statement = f"{kind} {name}{signature} : {type_str} {body}"
-        
+
     return formal_statement

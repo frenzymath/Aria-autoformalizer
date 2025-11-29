@@ -1,16 +1,16 @@
 llm:
   formalizer:
     provider: openai
-    model: "gemini-2.5-pro"
-    api_key: ""
-    base_url: ""
+    model: "Pro/moonshotai/Kimi-K2-Instruct-0905"
+    api_key: "sk-skejiplnwfxayhvgkcvubfvubrsuysnjtvuhfpnpphbvsaxu"
+    base_url: "https://api.siliconflow.cn/v1"
     temperature: 1
     max_completion_tokens: 20000
   main_model:
     provider: openai
-    model: "gemini-2.5-pro"
-    api_key: ""
-    base_url: ""
+    model: "Pro/moonshotai/Kimi-K2-Instruct-0905"
+    api_key: "sk-skejiplnwfxayhvgkcvubfvubrsuysnjtvuhfpnpphbvsaxu"
+    base_url: "https://api.siliconflow.cn/v1"
     temperature: 1
     max_completion_tokens: 20000
 
