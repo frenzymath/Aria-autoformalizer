@@ -4,8 +4,6 @@ Aria consists of two main components: Aria Autoformalizer Agent, which converts 
 
 ## Open-Source Compliance
 
-- Audit report: `OPEN_SOURCE_COMPLIANCE_REPORT.md`
-- Third-party attribution: `THIRD_PARTY_NOTICES.md`
 - Dependency manifests:
   - `Aria-autoformalizer/requirements.txt`
   - `AriaScorer/requirements.txt`
