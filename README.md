@@ -2,6 +2,17 @@
 
 Aria consists of two main components: Aria Autoformalizer Agent, which converts natural language math into formal Lean code, and AriaScorer, which evaluates the semantic consistency of the formalization.
 
+## Open-Source Compliance
+
+- Audit report: `OPEN_SOURCE_COMPLIANCE_REPORT.md`
+- Third-party attribution: `THIRD_PARTY_NOTICES.md`
+- Dependency manifests:
+  - `Aria-autoformalizer/requirements.txt`
+  - `AriaScorer/requirements.txt`
+- Project license: `Apache-2.0` (see `LICENSE`)
+
+Before running, set your own service endpoints in config files (or override verifier URL via `ARIA_VERIFY_URL`).
+
 # Aria Autoformalizer Agent
 
 ## Prerequisites

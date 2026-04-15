@@ -16,10 +16,10 @@ llm:
 
 services:
   verifier:
-    url: "https://console.siflow.cn/siflow/auriga/skyinfer/ytwang/repl-server-1/verify"
+    url: "http://127.0.0.1:8001/verify"
     timeout: 60
   goal_extractor:
-    url: "https://console.siflow.cn/siflow/auriga/skyinfer/ytwang/goal-ext-1/extract"
+    url: "http://127.0.0.1:8002/extract"
     timeout: 120
 
 enable_rag: True

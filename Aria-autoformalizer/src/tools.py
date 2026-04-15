@@ -10,9 +10,7 @@ import os
 import sys
 from pathlib import Path
 import requests
-import Levenshtein
 import hashlib
-import xlsxwriter
 from src.PocketFlow import Flow
 import aiohttp
 import asyncio
@@ -280,8 +278,24 @@ def extract_code_block(
             return None
 
 
-def lean_check(code: str) -> Dict:
-    url = ""
+def _resolve_verify_url(config: Optional[Dict[str, Any]] = None) -> str:
+    # Environment variable takes precedence for deployments.
+    env_url = os.getenv("ARIA_VERIFY_URL")
+    if env_url:
+        return env_url
+
+    if config:
+        return (
+            config.get("services", {})
+            .get("verifier", {})
+            .get("url", "http://127.0.0.1:8001/verify")
+        )
+
+    return "http://127.0.0.1:8001/verify"
+
+
+def lean_check(code: str, config: Optional[Dict[str, Any]] = None) -> Dict:
+    url = _resolve_verify_url(config)
     try:
         response = requests.post(url, json={"code": code, "timeout": 1600})
         response.raise_for_status()
@@ -291,8 +305,10 @@ def lean_check(code: str) -> Dict:
         return {"error": str(e)}
 
 
-async def async_lean_check(session, code: str) -> VerifyResult:
-    url = "http://repl-server-1.t-skyinfer-ytwang.svc.cluster.local/verify"
+async def async_lean_check(
+    session, code: str, config: Optional[Dict[str, Any]] = None
+) -> VerifyResult:
+    url = _resolve_verify_url(config)
     try:
         async with session.post(url, json={"code": code, "timeout": 60}) as response:
             result_dict = await response.json()
@@ -345,7 +361,9 @@ async def def_generate_and_verify_loop(
                 continue
 
             # --- 步骤 2: 验证代码 ---=
-            verification_result = await async_lean_check(session, current_code)
+            verification_result = await async_lean_check(
+                session, current_code, config
+            )
 
             # --- 步骤 3: 检查结果 ---
             if verification_result.pass_:
@@ -418,7 +436,9 @@ async def stat_generate_and_verify_loop(
                 continue
 
             # --- 步骤 2: 验证代码 ---=
-            verification_result = await async_lean_check(session, current_code)
+            verification_result = await async_lean_check(
+                session, current_code, config
+            )
 
             # --- 步骤 3: 检查结果 ---
             if verification_result.pass_:
